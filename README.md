@@ -29,4 +29,8 @@ The standard `spectool` function (listing source files and fetching them) is the
 
 So `spectool2 --source 0 some.spec` will give you `some.tar.gz` and not `Source0: some.tar.gz` to assist with scripting.
 
+## Installation in CentOS / RHEL 7
+
+    yum install https://extras.getpagespeed.com/release-el7-latest.rpm
+    yum install spectool2
     
