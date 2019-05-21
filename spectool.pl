@@ -296,6 +296,7 @@ Usage: spectool [<options>] <specfile>
 
 Options:
 Operating mode:
+     --inc-release               Increment Release: tag value
  -e, --edit-tag x --value y      updates Tag: with specific value (the tag
                                  should be unique and exist)
      --gg, --get-global x        gets specific %global(define) macro value
@@ -406,7 +407,38 @@ sub edit_tag {
     # write back to original file using temp file contents
     while (<$tmpspec_fh>) {
         my $line = $_;
-        print $line;
+        print $specfile_fh $line;
+    }
+}
+
+sub inc_release {
+	my $tmpspec_fh;
+	my $tmpspec_filename;
+	my $stderr_fh;
+	my $stderr_filename;
+
+    my $tag = "Release";
+
+	($tmpspec_fh, $tmpspec_filename) = File::Temp::tempfile ( 'spec_XXXXXXXXXX', DIR => $tmpdir );
+
+    # Release: is either 1%{?dist} or 0.1.20181124git%{shortcommit}%{?dist}.gps (pre-release)
+    # increment to: 2%{?dist} or 0.2.20181124git%{shortcommit}%{?dist}.gps (pre-release)
+
+    while (<$specfile_fh>) {
+        my $line = $_;
+        # $line =~ s@^(${tag}:\s*).*@$1${val}@ig;
+        $line =~ s@^(${tag}:\s*)(\d+)(%.*)@$1 . ($2 + 1) . $3@ige;
+        $line =~ s@^(${tag}:\s*0\.)(\d+)(\..*)@$1 . ($2 + 1) . $3@ige;
+        print $tmpspec_fh $line;
+    }
+
+    # rewind back for reading the temp
+    seek $tmpspec_fh, 0, 0;
+    seek $specfile_fh, 0, 0;
+    truncate $specfile_fh, 0;
+    # write back to original file using temp file contents
+    while (<$tmpspec_fh>) {
+        my $line = $_;
         print $specfile_fh $line;
     }
 }
@@ -438,6 +470,7 @@ GetOptions ('h|help' => sub { $command = 'help'; },
 			'edit-version=s' => \$x_edit_version_value,
 			'edit-tag=s' => \$x_edit_tag_value,
 			'get-global=s' => \$x_get_global_name,
+			'inc-release' => sub { $command = 'increlease'; },
 			'value=s' => \$x_value,
 			'g|gf|get-files' => sub { $command = 'getfiles'; },
 			'v|verbose' => sub { $verbose++; },
@@ -504,6 +537,7 @@ if (@ARGV) {
 
 foreach ($command) {
 	m/editversion/ && do { edit_specfile (); edit_version ($x_edit_version_value); last; };
+	m/increlease/ && do { edit_specfile (); inc_release (); last; };
 	m/edittag/ && do { edit_specfile (); edit_tag ($x_edit_tag_value, $x_value); last; };
 	m/getglobal/ && do { open_specfile (); get_global ($x_get_global_name); last; };
 	m/listfiles/ && do { open_specfile (); eval_sources_patches (); list_sources_patches (@what); last; };
