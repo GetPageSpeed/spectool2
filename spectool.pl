@@ -26,7 +26,7 @@ use File::Spec;
 use FileHandle;
 use Getopt::Long;
 
-$File::Temp::KEEP_ALL = 1;
+use warnings;
 
 my $VERSION = '1.0.10rpmdev2';
 my $CURLRC = '/etc/rpmdevtools/curlrc';
@@ -147,7 +147,7 @@ sub eval_sources_patches {
 	print $tmpspec_fh "EOF_$tmpspec_filename";
 	close $tmpspec_fh;
 
-	(undef, $stderr_filename) = File::Temp::tempfile ( 'stderr_XXXXXXXXXX', DIR => $tmpdir, KEEP_ALL => 1 );
+	(undef, $stderr_filename) = File::Temp::tempfile ( 'stderr_XXXXXXXXXX', DIR => $tmpdir );
 	debug "stderr filename: $stderr_filename\n";
 
 	open PIPE, "rpmbuild --define '_topdir " . $tmpdir . "' --define '_sourcedir " . $tmpdir . "' --define '_builddir " . $tmpdir . "' --define '_srcrpmdir " . $tmpdir . "' --define '_rpmdir " . $tmpdir . "' --nodeps -bp $tmpspec_filename 2>$stderr_filename |" or die;
@@ -197,7 +197,9 @@ sub expand {
 sub list_sources_patches {
 	foreach (@_) {
 	    if (@_ == 1) {
+            no warnings;
             m/^source(\d+)$/i && print $sources{$1};
+            use warnings;
             m/^patch(\d+)$/i && print $patches{$1};
             m/^source$/i && print $sources{0};
             m/^patch$/i && print $patches{0};
@@ -500,10 +502,12 @@ if ($x_edit_tag_value) {
 }
 
 if ($debug) {
-	$cleanup = 0;
+        $cleanup = 0;
 }
 
 $tmpdir = File::Temp::tempdir ( 'spectool_XXXXXXXXXX', DIR => File::Spec->tmpdir(), CLEANUP => $cleanup );
+
+
 debug "temp dir: $tmpdir\n";
 
 @sources = split (/,/, join (',', @sources));
