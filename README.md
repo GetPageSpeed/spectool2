@@ -17,6 +17,9 @@ BEWARE! I have no Perl experience and things may be super ugly if you look insid
 
     spectool2 --get-global --name upstream_version some.spec
 
+Note that `--get-global` only prints the first occurrence of a global, if there 
+are multiple.
+
 ### Edit a tag
 
     spectool2 --edit-tag Vendor --value GetPageSpeed some.spec

@@ -451,8 +451,11 @@ sub get_global {
 
     while (<$specfile_fh>) {
         my $line = $_;
-        my @matches = $line =~ /%(?:global|define) ${name} (\S+)/g;
-        print "@matches";
+        my @matches = $line =~ /%(?:global|define) ${name} (\S+)/;
+        if (@matches) {
+            print "@matches";
+            last;
+        }
     }
 
 }
